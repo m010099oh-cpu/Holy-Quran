@@ -1,4 +1,3 @@
-
 const quranSurahs = [
     { id: "001", name: "الفَاتِحَة", page: 1, verses: 7, type: "مَكِّيَّة" },
     { id: "002", name: "البَقَرَة", page: 2, verses: 286, type: "مَدَنِيَّة" },
@@ -115,67 +114,7 @@ const quranSurahs = [
     { id: "113", name: "الفَلَق", page: 604, verses: 5, type: "مَكِّيَّة" },
     { id: "114", name: "النَّاس", page: 604, verses: 6, type: "مَكِّيَّة" }
 ];
-const names = [
-    "ابراهيم الجبرين",
-    "ابراهيم العسيري",
-    "ابو بكر الشاطري",
-    "احمد بن علي العجمي",
-    "احمد الحواشي",
-    "السيد سعيد",
-    "احمد صابر",
-    "احمد نعينع",
-    "اكرم العلاقمي",
-    "الحسيني العزازي",
-    "ادريس ابكر",
-    "الزين محمد احمد",
-    "القارئ ياسين",
-    "العشري عمران",
-    "العيون الكوشي",
-    "العيون الصائغ",
-    "جمال شاكر عبد الله",
-    "حامد الدغريري",
-    "خالد الجليل",
-    "خالد القحطاني",
-    "خالد عبد الكافي",
-    "خالد الوهيبي",
-    "خليفة الطنيجي",
-    "داود حمزة",
-    "رشيد افراد",
-    "رشيد بلعاية",
-    "زكريا حمامة",
-    "عبد الله بخاري",
-    "سعد الغامدي",
-    "سعود الشريم",
-    "سهل ياسين",
-    "زكي داغستاني",
-    "سامي الحسن",
-    "سامي الدوسري",
-    "سيد رمضان",
-    "شعبان الصياد",
-    "شيرزاد عبد الرحمن طاهر",
-    "صابر عبد الحكم",
-    "صالح الصاهود",
-    "صالح ال طالب",
-    "صالح الهبدان",
-    "صلاح البدير",
-    "صلاح الهاشم",
-    "ابراهيم الاخضر",
-    "صلاح ابو طاهر",
-    "مختار الحاج",
-    "عادل ريان",
-    "عبدالبارئ الثبيتي",
-    "عبدالبارئ محمد",
-    "عبدالباسط عبدالصمد",
-    "عبدالرحمن السديس",
-    "عبد العزيز الاحمد",
-    "عبد العزيز الزهراني",
-    "عبد الله البريمي",
-    "عبد الله البعيجان",
-    "عبد الله المطرود",
-    "عبد الله بصفر",
-    "عبد الله خياط",
-    "عبد الله عواد الجهني",
-]
+
 
 let mood = ""
 let text;
@@ -185,6 +124,7 @@ let allSquares = document.querySelectorAll('square');
 let display = 'true';
 let SelectAll = document.querySelectorAll('span');
 let moshafID
+let allTitle
 SelectAll.forEach(liIndex => {
     liIndex.onclick = function(){
         this.style.background = "gray";
@@ -192,23 +132,29 @@ SelectAll.forEach(liIndex => {
 })
 
 
-function createLis(liTextContent){
-    for(let i = 1; i < names.length+1;i++){
-        let div = document.createElement("div")
-        div.id = "title"
-        div.className = i
-        div.textContent = liTextContent[i]
-        div.onclick = function(){
-            //document.querySelector(".liTextContent").textContent = this.textContent;
-            createLiOfSurahs(quranSurahs, div);                    
+function createLis(){
+    
+    fetch(`https://www.mp3quran.net/api/v3/reciters?language=ar&reciter`).then(res => res.json()).then(data => {
+        console.log(data.reciters)
+        for(let i = 0; i < data.reciters.length;i++){
+            let div = document.createElement("div")
+            div.id = "title"
+            div.onclick = function(){
+                mood = data.reciters[i].id
+                console.log(mood)
+                createLiOfSurahs(quranSurahs, div);
+            }
+            div.innerHTML = data.reciters[i].name
+            document.querySelector(".sonOfList").appendChild(div)
+            allTitle = Array.from(document.querySelectorAll("#title"))
         }
-        document.querySelector(".sonOfList").appendChild(div)
-    }
+    })
 }
-createLis(names)
+createLis()
+
 
 function createLiOfSurahs(ArrayOSurahs, title){
-        mood = title.className
+        //mood = title.className
         document.querySelector(".son").innerHTML = ""
         let ul = document.createElement("ul")
         document.querySelector(".son").appendChild(ul)
@@ -226,16 +172,13 @@ function createLiOfSurahs(ArrayOSurahs, title){
         }
 }
 function search(value){
-    for(let i = 0; i < titles.length;i++){
-        if(titles[i].innerHTML.includes(value)){
-            titles[i].style.display = 'flex';
-            titles[i].nextElementSibling.style.display = 'block';    
-        }else{
-            titles[i].style.display = 'none'
-            titles[i].nextElementSibling.style.display = 'none'
+    for(let i = 0; i < allTitle.length;i++){
+        if(allTitle[i].textContent.includes(value)){
+            allTitle[i].style.display = "flex"
+        }else {
+            allTitle[i].style.display = "none"
         }
     }
-
 }
 
 
@@ -266,6 +209,7 @@ function chageCurrentTime(argument){
         document.querySelector('audio').currentTime = document.querySelector('audio').currentTime+10
     }
 }
+
 
 function API_REQUEST(id){
 AudioMood = true;
@@ -304,9 +248,13 @@ fetch(`https://www.mp3quran.net/api/v3/reciters?language=ar&reciter=${mood}`).th
     document.getElementById('range').value = document.querySelector('audio').currentTime
     if(document.querySelector(".close")){
         document.querySelector(".close").onclick = function(){
-            this.parentElement.parentElement.remove()
-            document.querySelector('audio').pause()
-            AudioMood = false
+            if(this.parentElement.parentElement){
+                this.parentElement.parentElement.remove()
+                if(document.querySelector('audio')){
+                    document.querySelector('audio').pause()
+                }
+                AudioMood = false
+            }
         }
     }
 })
