@@ -1,3 +1,4 @@
+
 const quranSurahs = [
     { id: "001", name: "الفَاتِحَة", page: 1, verses: 7, type: "مَكِّيَّة" },
     { id: "002", name: "البَقَرَة", page: 2, verses: 286, type: "مَدَنِيَّة" },
@@ -136,7 +137,7 @@ function createLis(){
     
     fetch(`https://www.mp3quran.net/api/v3/reciters?language=ar&reciter`).then(res => res.json()).then(data => {
         console.log(data.reciters)
-        for(let i = 0; i < data.reciters.length;i++){
+        /*for(let i = 0; i < data.reciters.length;i++){
             let div = document.createElement("div")
             div.id = "title"
             div.onclick = function(){
@@ -147,7 +148,24 @@ function createLis(){
             div.innerHTML = data.reciters[i].name
             document.querySelector(".sonOfList").appendChild(div)
             allTitle = Array.from(document.querySelectorAll("#title"))
+        }*/
+       for(let i = 0; i < data.reciters.length;i++){
+        for(let j = 0; j < data.reciters[i].moshaf.length;j++){
+            console.log(data.reciters[i].moshaf[j].name)
+            let div = document.createElement("div")
+            div.textContent = `${data.reciters[i].name}-${data.reciters[i].moshaf[j].name}`
+            div.id = "title"
+            div.onclick = function(){
+                mood = data.reciters[i].id
+                moshafID = data.reciters[i].moshaf[j].server
+                console.log(mood)
+                createLiOfSurahs(quranSurahs, div);
+            }
+            document.querySelector(".sonOfList").appendChild(div)
+            console.log(document.querySelector(".sonOfList").children.length)
         }
+       }
+       allTitle = Array.from(document.querySelectorAll("#title"))
     })
 }
 createLis()
@@ -172,13 +190,21 @@ function createLiOfSurahs(ArrayOSurahs, title){
         }
 }
 function search(value){
-    for(let i = 0; i < allTitle.length;i++){
-        if(allTitle[i].textContent.includes(value)){
+   for(let i = 0; allTitle.length;i++){
+    if(allTitle[i].textContent.normalize("NFD")
+        // 2. إزالة علامات التشكيل (الحركات)
+        .replace(/[\u0300-\u036f]/g, "")
+        // 3. توحيد الهمزات والألف المقصورة والتاء المربوطة
+        .replace(/[أإآأ]/g, "ا")
+        .replace(/ة/g, "ه")
+        .replace(/ى/g, "ي")
+        // 4. إزالة الشدة وعلامات التشكيل القرآنية/العربية الإضافية إن وجدت
+        .replace(/[\u064B-\u065F]/g, "").includes(value)){
             allTitle[i].style.display = "flex"
         }else {
             allTitle[i].style.display = "none"
         }
-    }
+   }
 }
 
 
@@ -190,11 +216,11 @@ function handleClick(){
     span.className = "material-icons"
     if(AudioMood === true){
         span.textContent = "play_arrow"
-        document.querySelector('audio').pause()
+        document.querySelector('.audio').pause()
         AudioMood = false;
     }else{
         span.textContent = "pause"
-        document.querySelector('audio').play()
+        document.querySelector('.audio').play()
         AudioMood = true
     }
     document.querySelector(".playAndPause").innerHTML = ""
@@ -204,9 +230,9 @@ function handleClick(){
 
 function chageCurrentTime(argument){
     if(argument === "minusTen"){
-        document.querySelector('audio').currentTime = document.querySelector('audio').currentTime-10
+        document.querySelector('.audio').currentTime = document.querySelector('.audio').currentTime-10
     }else{
-        document.querySelector('audio').currentTime = document.querySelector('audio').currentTime+10
+        document.querySelector('.audio').currentTime = document.querySelector('.audio').currentTime+10
     }
 }
 
@@ -218,14 +244,13 @@ fetch(`https://www.mp3quran.net/api/v3/reciters?language=ar&reciter=${mood}`).th
     if(document.querySelector(".son").querySelector(".divOfPlay")){
         document.querySelector(".son").querySelector(".divOfPlay").remove()
     }
-    moshafID = data.reciters[0].moshaf[0].server
     console.log(data)
     console.log(moshafID)
     let divOfPaly = document.createElement("div")
     divOfPaly.innerHTML = `
     <div id='parentOfRange'>
     <button class="close">X</button>
-      <p style="color: white; background-color: rgba(225, 225, 230, 0.42); padding: 5px; font-size: 20px; border-radius: 10px;" class="parg">${data.reciters[0].name}</p>
+      <p style="color: white; background-color: black;padding: 5px; font-size: 20px; border-radius: 10px;" class="parg">${data.reciters[0].name}</p>
       <input id="range" type="range" value="0" step="0.1">
       <div class="parentOfControls">
       <button class="minusTen" onclick="chageCurrentTime(this.className)">
@@ -237,21 +262,21 @@ fetch(`https://www.mp3quran.net/api/v3/reciters?language=ar&reciter=${mood}`).th
       </button>
       </div>
      </div>
-     <audio style='display='none' controls loop autoplay>
+     <audio class="audio" style='display='none' controls loop autoplay>
       <source src="${moshafID+`${id}.mp3`}" type='audio/mp3'>
      </audio>
     `;
     divOfPaly.className = "divOfPlay"
      document.querySelector('.son').firstElementChild.before(divOfPaly)
-    document.querySelector('audio').addEventListener('timeupdate', function(){
-    document.getElementById('range').max = document.querySelector('audio').duration
-    document.getElementById('range').value = document.querySelector('audio').currentTime
+    document.querySelector('.audio').addEventListener('timeupdate', function(){
+    document.getElementById('range').max = document.querySelector('.audio').duration
+    document.getElementById('range').value = document.querySelector('.audio').currentTime
     if(document.querySelector(".close")){
         document.querySelector(".close").onclick = function(){
             if(this.parentElement.parentElement){
                 this.parentElement.parentElement.remove()
-                if(document.querySelector('audio')){
-                    document.querySelector('audio').pause()
+                if(document.querySelector('.audio')){
+                    document.querySelector('.audio').pause()
                 }
                 AudioMood = false
             }
@@ -259,7 +284,7 @@ fetch(`https://www.mp3quran.net/api/v3/reciters?language=ar&reciter=${mood}`).th
     }
 })
 document.getElementById('range').addEventListener('input', function(){
-    document.querySelector('audio').currentTime = document.getElementById('range').value
+    document.querySelector('.audio').currentTime = document.getElementById('range').value
 })
 })
 }
