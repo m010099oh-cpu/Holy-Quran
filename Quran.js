@@ -1,4 +1,3 @@
-
 const quranSurahs = [
     { id: "001", name: "الفَاتِحَة", page: 1, verses: 7, type: "مَكِّيَّة" },
     { id: "002", name: "البَقَرَة", page: 2, verses: 286, type: "مَدَنِيَّة" },
