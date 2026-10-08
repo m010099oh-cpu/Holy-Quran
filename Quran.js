@@ -1,3 +1,9 @@
+const ul = document.querySelector(".container ul.mainUL")
+const surahList = document.querySelector(".li-surahs")
+const audioPlayer = document.querySelector(".audio-player")
+const reciterName = document.querySelector(".reciter-name")
+const searchInput = document.querySelector(".search")
+
 const quranSurahs = [
     { id: "001", name: "الفَاتِحَة", page: 1, verses: 7, type: "مَكِّيَّة" },
     { id: "002", name: "البَقَرَة", page: 2, verses: 286, type: "مَدَنِيَّة" },
@@ -113,180 +119,203 @@ const quranSurahs = [
     { id: "112", name: "الإِخْلَاص", page: 604, verses: 4, type: "مَكِّيَّة" },
     { id: "113", name: "الفَلَق", page: 604, verses: 5, type: "مَكِّيَّة" },
     { id: "114", name: "النَّاس", page: 604, verses: 6, type: "مَكِّيَّة" }
-];
+]
 
+let reciterButtons = []
 
-let mood = ""
-let text;
-let ArrayOfFirsts = document.querySelectorAll('#first')
-let classOfElement;
-let allSquares = document.querySelectorAll('square');
-let display = 'true';
-let SelectAll = document.querySelectorAll('span');
-let moshafID
-let allTitle
-SelectAll.forEach(liIndex => {
-    liIndex.onclick = function(){
-        this.style.background = "gray";
-    }
-})
-
-
-function createLis(){
-    
-    fetch(`https://www.mp3quran.net/api/v3/reciters?language=ar&reciter`).then(res => res.json()).then(data => {
-        console.log(data.reciters)
-        /*for(let i = 0; i < data.reciters.length;i++){
-            let div = document.createElement("div")
-            div.id = "title"
-            div.onclick = function(){
-                mood = data.reciters[i].id
-                console.log(mood)
-                createLiOfSurahs(quranSurahs, div);
-            }
-            div.innerHTML = data.reciters[i].name
-            document.querySelector(".sonOfList").appendChild(div)
-            allTitle = Array.from(document.querySelectorAll("#title"))
-        }*/
-       for(let i = 0; i < data.reciters.length;i++){
-        for(let j = 0; j < data.reciters[i].moshaf.length;j++){
-            console.log(data.reciters[i].moshaf[j].name)
-            let div = document.createElement("div")
-            div.textContent = `${data.reciters[i].name}-${data.reciters[i].moshaf[j].name}`
-            div.id = "title"
-            div.onclick = function(){
-                mood = data.reciters[i].id
-                moshafID = data.reciters[i].moshaf[j].server
-                console.log(mood)
-                createLiOfSurahs(quranSurahs, div);
-            }
-            document.querySelector(".sonOfList").appendChild(div)
-            console.log(document.querySelector(".sonOfList").children.length)
-        }
-       }
-       allTitle = Array.from(document.querySelectorAll("#title"))
-    })
-}
-createLis()
-
-
-function createLiOfSurahs(ArrayOSurahs, title){
-        //mood = title.className
-        document.querySelector(".son").innerHTML = ""
-        let ul = document.createElement("ul")
-        document.querySelector(".son").appendChild(ul)
-        for(let i = 0; i < 114;i++){
-            let li = document.createElement("li")
-            li.dir = "rtl"
-            li.onclick = function(){API_REQUEST(ArrayOSurahs[i].id)}
-            li.innerHTML = `
-            <span class="name">${ArrayOSurahs[i].name}</span>
-            <span class="type">${ArrayOSurahs[i].type}</span>
-            <span class="verses">${ArrayOSurahs[i].verses}</span>
-            <span class="id">${ArrayOSurahs[i].id}</span>
-            `
-            ul.appendChild(li)
-        }
-}
-function search(value){
-   for(let i = 0; allTitle.length;i++){
-    if(allTitle[i].textContent.normalize("NFD")
-        // 2. إزالة علامات التشكيل (الحركات)
+function normalizeText(value = "") {
+    return value
+        .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
-        // 3. توحيد الهمزات والألف المقصورة والتاء المربوطة
-        .replace(/[أإآأ]/g, "ا")
+        .replace(/[أإآ]/g, "ا")
         .replace(/ة/g, "ه")
         .replace(/ى/g, "ي")
-        // 4. إزالة الشدة وعلامات التشكيل القرآنية/العربية الإضافية إن وجدت
-        .replace(/[\u064B-\u065F]/g, "").includes(value)){
-            allTitle[i].style.display = "flex"
-        }else {
-            allTitle[i].style.display = "none"
+        .toLowerCase()
+}
+
+function renderSurahs(serverUrl) {
+    surahList.innerHTML = ""
+
+    quranSurahs.forEach((surah) => {
+        const li = document.createElement("li")
+        li.innerHTML = `
+            <span>${surah.name}</span>
+            <span>${surah.type}</span>
+            <span>${surah.verses}</span>
+            <span>${surah.page}</span>
+            <span>${surah.id}</span>
+        `
+
+        li.addEventListener("click", (event) => playSurah(serverUrl, surah.id, event))
+        surahList.appendChild(li)
+    })
+}
+
+function createFloatingAudio(sourceUrl, event) {
+    const oldPopup = document.querySelector(".floating-audio")
+    if (oldPopup) oldPopup.remove()
+
+    const popup = document.createElement("div")
+    popup.className = "floating-audio"
+
+    const closeButton = document.createElement("button")
+    closeButton.className = "floating-close"
+    closeButton.textContent = "×"
+    closeButton.type = "button"
+    closeButton.addEventListener("click", () => {
+        popup.remove()
+    })
+
+    const audio = document.createElement("audio")
+    audio.autoplay = true
+    audio.preload = "auto"
+
+    const source = document.createElement("source")
+    source.src = sourceUrl
+    source.type = "audio/mpeg"
+
+    audio.appendChild(source)
+
+    const controls = document.createElement("div")
+    controls.className = "floating-controls"
+
+    const navButtons = document.createElement("div")
+    navButtons.className = "floating-nav"
+
+    const rewindBtn = document.createElement("button")
+    rewindBtn.type = "button"
+    rewindBtn.className = "material-icons"
+    rewindBtn.textContent = "fast_rewind"
+    rewindBtn.addEventListener("click", () => {
+        audio.currentTime = Math.max(0, audio.currentTime - 10)
+    })
+
+    const forwardBtn = document.createElement("button")
+    forwardBtn.type = "button"
+    forwardBtn.className = "material-icons"
+    forwardBtn.textContent = "fast_forward"
+    forwardBtn.addEventListener("click", () => {
+        audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 10)
+    })
+
+    const playPauseBtn = document.createElement("button")
+    playPauseBtn.type = "button"
+    playPauseBtn.className = "play-pause-btn"
+    playPauseBtn.textContent = "Pause"
+
+    const progress = document.createElement("input")
+    progress.type = "range"
+    progress.className = "audio-progress"
+    progress.min = "0"
+    progress.max = "100"
+    progress.value = "0"
+    progress.step = "0.1"
+
+    playPauseBtn.addEventListener("click", () => {
+        if (audio.paused) {
+            audio.play()
+            return
         }
-   }
+
+        audio.pause()
+    })
+
+    progress.addEventListener("input", () => {
+        if (!audio.duration) return
+        audio.currentTime = (Number(progress.value) / 100) * audio.duration
+    })
+
+    audio.addEventListener("play", () => {
+        playPauseBtn.textContent = "Pause"
+    })
+
+    audio.addEventListener("pause", () => {
+        playPauseBtn.textContent = "Play"
+    })
+
+    audio.addEventListener("timeupdate", () => {
+        if (!audio.duration) return
+        const percent = (audio.currentTime / audio.duration) * 100
+        progress.value = String(percent)
+    })
+
+    navButtons.appendChild(rewindBtn)
+    navButtons.appendChild(playPauseBtn)
+    navButtons.appendChild(forwardBtn)
+    controls.appendChild(navButtons)
+    controls.appendChild(progress)
+    popup.appendChild(closeButton)
+    popup.appendChild(audio)
+    popup.appendChild(controls)
+    document.body.appendChild(popup)
+
+    popup.style.left = "50%"
+    popup.style.top = "50%"
+
+    audio.play().catch(() => {
+        playPauseBtn.textContent = "Play"
+        console.warn("Audio autoplay was blocked by the browser. Please click play manually.")
+    })
 }
 
+function playSurah(serverUrl, surahId, event) {
+    const safeServer = serverUrl.endsWith("/") ? serverUrl : `${serverUrl}/`
+    const audioSource = `${safeServer}${surahId}.mp3`
 
-let innerMood;
-
-let AudioMood
-function handleClick(){
-    let span = document.createElement("span")
-    span.className = "material-icons"
-    if(AudioMood === true){
-        span.textContent = "play_arrow"
-        document.querySelector('.audio').pause()
-        AudioMood = false;
-    }else{
-        span.textContent = "pause"
-        document.querySelector('.audio').play()
-        AudioMood = true
-    }
-    document.querySelector(".playAndPause").innerHTML = ""
-    document.querySelector('.playAndPause').appendChild(span)
-}
-
-
-function chageCurrentTime(argument){
-    if(argument === "minusTen"){
-        document.querySelector('.audio').currentTime = document.querySelector('.audio').currentTime-10
-    }else{
-        document.querySelector('.audio').currentTime = document.querySelector('.audio').currentTime+10
-    }
-}
-
-
-function API_REQUEST(id){
-AudioMood = true;
-
-fetch(`https://www.mp3quran.net/api/v3/reciters?language=ar&reciter=${mood}`).then(res => res.json()).then(data => {
-    if(document.querySelector(".son").querySelector(".divOfPlay")){
-        document.querySelector(".son").querySelector(".divOfPlay").remove()
-    }
-    console.log(data)
-    console.log(moshafID)
-    let divOfPaly = document.createElement("div")
-    divOfPaly.innerHTML = `
-    <div id='parentOfRange'>
-    <button class="close">X</button>
-      <p style="color: white; background-color: black;padding: 5px; font-size: 20px; border-radius: 10px;" class="parg">${data.reciters[0].name}</p>
-      <input id="range" type="range" value="0" step="0.1">
-      <div class="parentOfControls">
-      <button class="minusTen" onclick="chageCurrentTime(this.className)">
-       <span class="material-icons">fast_rewind</span>
-      </button>
-        <button onclick='handleClick()' class='playAndPause'><span class="material-icons">pause</span></button>
-      <button class="plusTen" onclick="chageCurrentTime(this.className)">
-       <span class="material-icons">fast_forward</span>
-      </button>
-      </div>
-     </div>
-     <audio class="audio" style='display='none' controls loop autoplay>
-      <source src="${moshafID+`${id}.mp3`}" type='audio/mp3'>
-     </audio>
-    `;
-    divOfPaly.className = "divOfPlay"
-     document.querySelector('.son').firstElementChild.before(divOfPaly)
-    document.querySelector('.audio').addEventListener('timeupdate', function(){
-    document.getElementById('range').max = document.querySelector('.audio').duration
-    document.getElementById('range').value = document.querySelector('.audio').currentTime
-    if(document.querySelector(".close")){
-        document.querySelector(".close").onclick = function(){
-            if(this.parentElement.parentElement){
-                this.parentElement.parentElement.remove()
-                if(document.querySelector('.audio')){
-                    document.querySelector('.audio').pause()
-                }
-                AudioMood = false
-            }
+    if (audioPlayer) {
+        const dynamicAudio = audioPlayer.querySelector("audio")
+        if (dynamicAudio) {
+            dynamicAudio.remove()
         }
     }
-})
-document.getElementById('range').addEventListener('input', function(){
-    document.querySelector('.audio').currentTime = document.getElementById('range').value
-})
-})
+
+    createFloatingAudio(audioSource, event)
 }
+
+async function loadReciters() {
+    try {
+        const response = await fetch("https://www.mp3quran.net/api/v3/reciters?language=ar")
+        const data = await response.json()
+        const reciters = Array.isArray(data.reciters) ? data.reciters : []
+
+        ul.innerHTML = ""
+        reciterButtons = []
+
+        reciters.forEach((reciter) => {
+            const moshafList = Array.isArray(reciter.moshaf) ? reciter.moshaf : []
+
+            moshafList.forEach((moshaf) => {
+                const li = document.createElement("li")
+                li.textContent = `${reciter.name} - ${moshaf.name}`
+                li.addEventListener("click", () => {
+                    reciterName.textContent = `${reciter.name} - ${moshaf.name}`
+                    renderSurahs(moshaf.server)
+                })
+
+                ul.appendChild(li)
+                reciterButtons.push(li)
+            })
+        })
+
+        if (reciterButtons.length > 0) {
+            reciterButtons[0].click()
+        }
+    } catch (error) {
+        console.error("Failed to load reciters:", error)
+    }
+}
+
+function searchReciters(event) {
+    const value = normalizeText(event.target.value)
+
+    reciterButtons.forEach((item) => {
+        const text = normalizeText(item.textContent)
+        item.style.display = text.includes(value) ? "flex" : "none"
+    })
+}
+
+searchInput.addEventListener("input", searchReciters)
+loadReciters()
 
 
 
