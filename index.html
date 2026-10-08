@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./Quran.css">
     <title>Document</title>
+    <link rel="stylesheet" href="./Quran.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,26 +14,39 @@
     <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="list" id="list">
-        <input dir="rtl" id="inputOfText" type="text" placeholder="البحث باسم القارئ" onkeyup="search(this.value)">
-            <div class="sonOfList">
-                
-            </div>
-    </div>
+    <nav class="quran-nav">
+        <a href="https://m010099oh-cpu.github.io/mainpage/">الرئيسية</a>
+        <a href="https://m010099oh-cpu.github.io/prophets/">الأنبياء</a>
+        <a href="https://m010099oh-cpu.github.io/bukhari/">صحيح البخاري</a>
+        <a href="https://m010099oh-cpu.github.io/muslim/">صحيح مسلم</a>
+        <a href="#favorites">المفضلة</a>
+    </nav>
 
-    <div class="container">
+    <header class="container" id="favorites">
+        <div class="ulParent">
+            <input type="text" class="search" placeholder="البحث باسم القارئ">
+            <ul class="mainUL">
 
-        <div class="navBar">
-            <a href="https://m010099oh-cpu.github.io/mainpage/">الصفحة الرئيسية</a>
-            <a href="https://m010099oh-cpu.github.io/bukhari/">احاديث البخاري</a>
-            <a href="https://m010099oh-cpu.github.io/muslim/">احاديث مسلم</a>
-            <a href="https://m010099oh-cpu.github.io/Holy-Quran/">استماع قران</a>
-            <a href="https://m010099oh-cpu.github.io/prophets/">قصص الأنبياء</a>
-            <div class="liTextContent"></div>
+            </ul>
         </div>
-        <div class="son"></div>
-    </div>
-
+        <div class="content">
+            <div class="audio-section">
+                <div class="audio-player">
+                    <div class="audio-player-inner">
+                       <div class="reciter-name-wrap">
+                           <div class="reciter-name"></div>
+                       </div>
+                       <div class="audio-actions">
+                           <button class="material-icons">fast_rewind</button>
+                           <button class="material-icons">fast_forward</button>
+                       </div>
+                    </div>
+                </div>
+            </div>
+            <ul class="li-surahs">
+            </ul>
+        </div>
+    </header>
     <script src="./Quran.js"></script>
 </body>
 </html>
